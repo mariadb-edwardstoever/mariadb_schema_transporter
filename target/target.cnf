@@ -1,0 +1,16 @@
+# mariadb_schema_transporter client configuration file
+# created by Edward Stoever for MariaDB Support
+
+# Use this file to specify any standard client options 
+# If none are specified, the script will attempt a socket connection from 
+# unix account, such as root@localhost.
+
+# Supported connections: MUST BE ON SAME HOST AS DATABASE SERVER
+
+# The group name must be [target]
+[target]
+# user = mariabackup
+# password = "mypassword"
+# host = localhost
+# port = 3306
+
