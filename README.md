@@ -1,2 +1,2 @@
-# mariadb_schema_transporter
+# Mariadb Schema Transporter
 Mariadb Schema Transporter
