@@ -20,7 +20,7 @@ wget https://github.com/mariadb-edwardstoever/mariadb_schema_transporter/archive
 ```
 ***
 ## Example 
-The script is divided into two subdirectories, source and target. Assuming you allow for root@localhost connections, with ALL PRIVILEGES connecting via unix socket, you can ignore configuring the script. In that case, to backup a single schema, run the following command from the source directory:
+Mariadb Schema Transporter is divided into two subdirectories, source and target. Assuming you allow for root@localhost connections, with ALL PRIVILEGES connecting via unix socket, you can ignore configuring the script. In that case, to backup a single schema for transport, run the following command from the source directory:
 ```
 ./backup_schema.sh --source-schema=myschema
 ```
@@ -30,7 +30,7 @@ That will produce two files:
 /tmp/schema_transporter/mariabackupstream.gz
 ```
 
-Copy those files to the host where you want to duplicate the schema. Again, assuming root@localhost connecting via unix socket, run the following command from the target directory:
+Copy those files to the same directory on the host where you want to duplicate the schema. Again, assuming root@localhost connecting via unix socket, run the following command from the target directory:
 ```
 ./restore_schema.sh --target-schema=myduplicatedschema
 ```
@@ -64,9 +64,9 @@ $ du -sh /var/lib/mysql/mydb
 
 ```
 #### Target
-The target will require additional free space, even more than the source. First, you must have a mount point to place the two compressed files `mariabackupstream.gz` and `source_schema.dump.sql.gz`. When the script extracts from these files, additional files will be stored in a subdirectory `stage`. Expect the file mariabackupstream.gz to expand about 10 times. So if mariabackupstream.gz is 100M, you will need an additional 1000M of free space.
+The target will require additional free space, even more than the source. First, you must have a mount point to place the two compressed files `mariabackupstream.gz` and `source_schema.dump.sql.gz`. When the script is run, additional files will be stored in a subdirectory `stage`. Expect the file mariabackupstream.gz to extract about 10 times in overall size, plus you will need some room for a margin of error. So if mariabackupstream.gz is 100M, you will need an _additional_ 1200M of free space.
 
-Next, you will need to ensure that the datadir of the database has enough space to store all of those new files. It will need the same storage that is used for the subdirectory of the datadir where the schema is stored _on the source_.
+Next, you will need to ensure that the datadir of the database has enough space to store all of those new files. It will need the same storage that is used for the subdirectory of the datadir where the schema is stored _on the source_. In this example, 1200M of free space in the datadir would be enough.
 
 Once the operation is completed, the script will ask you if you want to remove the temporary files.
 
@@ -79,10 +79,11 @@ With the option `--base-dir=/opt/mydb_bkup`, the backup script will store the fi
 
 With the option `--base-dir=/opt/mydb_bkup`, the restore script will expect the files `source_schema.dump.sql.gz` and  `mariabackupstream.gz` in the directory `/opt/mydb_bkup/schema_transporter`. 
 
-The base directory for the source does not have to be the same as the base directory for the target.
+The base directory for the source does not have to be the same as the base directory for the target. 
 
 ***
 ## Options
+
 #### Source
 A number of options are available when running the backup_schema.sh script:
 ```
