@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# backup_schema.sh
+# restore_schema.sh
 # By Edward Stoever for MariaDB Support
 
 ### DO NOT EDIT SCRIPT. 
 ### FOR FULL INSTRUCTIONS: README.md
 ### FOR BRIEF INSTRUCTIONS: ./restore_schema.sh --help
 
-# Establish working directory and source pre_quick_review.sh
+# Establish working directory 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source ${SCRIPT_DIR}/../vsn.sh
 source ${SCRIPT_DIR}/pre_restore.sh
@@ -25,6 +25,7 @@ unpack
 prepare_backup
 import_dump
 table_report
+tables_with_unsupported_characters
 tables_not_innodb_report
 print_table_list_to_file
 print_partitioned_table_list_to_file
@@ -35,3 +36,4 @@ transport_tablespaces_for_not_partitioned_tables
 transport_tablespaces_for_partitioned_tables
 transport_tablespaces_for_subpartitioned_tables
 foreign_key_checks_on
+interactive_rm_tool_directory

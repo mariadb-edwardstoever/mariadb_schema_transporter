@@ -1,3 +1,4 @@
+-- Mariadb Schema Transporter
 -- QUERY BY EDWARD STOEVER FOR MARIADB SUPPORT
 
 select 'YES' into @CHECK_EVENT_PRIV 

@@ -63,7 +63,7 @@ if [ ! $CAN_CONNECT ]; then
   TEMP_COLOR=lyellow; print_color "$CMD_MARIADB $CLOPTS\n";unset TEMP_COLOR; 
   local SQL="select now();"
   ERRTEXT=$($CMD_MARIADB $CLOPTS -e "$SQL" 2>&1); TEMP_COLOR=lcyan; print_color "$ERRTEXT\n";unset TEMP_COLOR;
-  die "Database connection failed. Read the file README.md. Edit the file quick_review.cnf."; 
+  die "Database connection failed. Read the file README.md. Edit the file target.cnf."; 
 fi
 }
 
@@ -180,10 +180,10 @@ function is_db_localhost(){
     local CLIENTHOST=$(hostname)
     if [ ! "$DBHOST" == "$CLIENTHOST" ]; then CLIENT_SIDE='TRUE'; else DB_IS_LOCAL='TRUE'; fi
 
-	  if [ ! $DB_IS_LOCAL ]; then
+      if [ ! $DB_IS_LOCAL ]; then
          printf "Notice:        ";TEMP_COLOR=lred;  print_color "Database is remote. Please run this script locally.\n";unset TEMP_COLOR;
-		 die "This script should be run on the host of the database."
-	  fi
+         die "This script should be run on the host of the database."
+      fi
 }
 
 function verify_dirs() {
@@ -214,14 +214,14 @@ function unpack(){
   cat ../mariabackupstream.gz | gzip -d | mbstream -x || local ERR=TRUE
   if [ $ERR ]; then 
     TEMP_COLOR=lred;  print_color "The command to uncompress backup failed.\n";unset TEMP_COLOR;
-	die "gzip and mbstream failed."
+    die "gzip and mbstream failed."
   else 
     TEMP_COLOR=lcyan;  print_color "Uncompress of backup file succeeded.\n";unset TEMP_COLOR;
   fi
   cat ../source_schema.dump.sql.gz | gzip -d > source_schema.dump.sql || local ERR=TRUE
   if [ $ERR ]; then 
     TEMP_COLOR=lred;  print_color "The command to uncompress dump failed.\n";unset TEMP_COLOR;
-	die "gzip failed."
+    die "gzip failed."
   else 
     TEMP_COLOR=lcyan;  print_color "Uncompress of dump file succeeded.\n";unset TEMP_COLOR;
   fi
@@ -234,7 +234,7 @@ function prepare_backup(){
   $CMD_MARIABACKUP $CLOPTS  --prepare --export --target-dir=${BASEDIR}/${TOOL}/stage || local ERR=TRUE
   if [ $ERR ]; then 
     TEMP_COLOR=lred;  print_color "The prepare command failed.\n";unset TEMP_COLOR;
-	die "gzip failed."
+    die "gzip failed."
   else 
     TEMP_COLOR=lcyan;  print_color "Prepare of backup succeeded.\n";unset TEMP_COLOR;
   fi
@@ -265,7 +265,7 @@ function import_dump(){
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" || local ERR=TRUE
   if [ $ERR ]; then 
     TEMP_COLOR=lred;  print_color "The import of file $DUMPFILE failed.\n";unset TEMP_COLOR;
-	die "import failed."
+    die "import failed."
   else 
     TEMP_COLOR=lcyan;  print_color "The import of file $DUMPFILE succeeded.\n";unset TEMP_COLOR;
   fi
@@ -279,7 +279,7 @@ function print_table_list_to_file(){
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" > $TABLE_LIST_FILE || local ERR=TRUE
   if [ $ERR ]; then 
     TEMP_COLOR=lred;  print_color "Generating the file $TABLE_LIST_FILE failed.\n";unset TEMP_COLOR;
-	die "file creation failed."
+    die "file creation failed."
   else 
     TEMP_COLOR=lcyan;  print_color "Generating the file $TABLE_LIST_FILE succeeded.\n";unset TEMP_COLOR;
   fi
@@ -293,7 +293,7 @@ function print_partitioned_table_list_to_file(){
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" > $PARTITIONED_TABLE_LIST_FILE || local ERR=TRUE
   if [ $ERR ]; then 
     TEMP_COLOR=lred;  print_color "Generating the file $PARTITIONED_TABLE_LIST_FILE failed.\n";unset TEMP_COLOR;
-	die "file creation failed."
+    die "file creation failed."
   else 
     TEMP_COLOR=lcyan;  print_color "Generating the file $PARTITIONED_TABLE_LIST_FILE succeeded.\n";unset TEMP_COLOR;
   fi
@@ -307,7 +307,7 @@ function print_subpartitioned_table_list_to_file(){
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" > $SUBPARTITIONED_TABLE_LIST_FILE || local ERR=TRUE
   if [ $ERR ]; then 
     TEMP_COLOR=lred;  print_color "Generating the file $SUBPARTITIONED_TABLE_LIST_FILE failed.\n";unset TEMP_COLOR;
-	die "file creation failed."
+    die "file creation failed."
   else 
     TEMP_COLOR=lcyan;  print_color "Generating the file $SUBPARTITIONED_TABLE_LIST_FILE succeeded.\n";unset TEMP_COLOR;
   fi
@@ -367,13 +367,13 @@ function transport_tablespaces_for_not_partitioned_tables() {
 }
 
 foreign_key_checks_off(){
-  SQL="set global foreign_key_checks=OFF;"
+  SQL="set global foreign_key_checks=OFF; set global check_constraint_checks=OFF;"
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" || local ERR=TRUE
   if [ $ERR ]; then die "Something went wrong when setting foreign_key_checks=OFF"; fi
 }
 
 foreign_key_checks_on(){
-  SQL="set global foreign_key_checks=ON;"
+  SQL="set global foreign_key_checks=ON; set global check_constraint_checks=ON;"
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" || local ERR=TRUE
   if [ $ERR ]; then die "Something went wrong when setting foreign_key_checks=ON"; fi
 }
@@ -438,16 +438,16 @@ function transport_tablespaces_for_partitioned_tables() {
   SCHEMA_NAME=$TRG
   while IFS= read -r tb; do  
     create_placeholder_table $tb
-	remove_partitioning_from_placeholder ${tb}_placeholder
+    remove_partitioning_from_placeholder ${tb}_placeholder
     while IIFS= read -r pt; do
        discard_tablespace ${tb}_placeholder;
        find ${BASEDIR}/${TOOL}/stage -name "${tb}\#*\#${pt}.ibd" -exec cp -f {}  ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.ibd \; || local ERR=TRUE
-	   find ${BASEDIR}/${TOOL}/stage -name "${tb}\#*\#${pt}.cfg" -exec cp -f {}  ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.cfg \; || local ERR=TRUE
+       find ${BASEDIR}/${TOOL}/stage -name "${tb}\#*\#${pt}.cfg" -exec cp -f {}  ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.cfg \; || local ERR=TRUE
        chown $MARIADB_PROCESS_OWNER:$MARIADB_PROCESS_OWNER ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.ibd || local ERR=TRUE
        chown $MARIADB_PROCESS_OWNER:$MARIADB_PROCESS_OWNER ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.cfg || local ERR=TRUE
-	   if [ $ERR ]; then die "something did not work out in transport_tablespaces_for_partitioned_tables."; fi
-	   import_tablespace ${tb}_placeholder
-	   exchange_partition_for_partitioned_table ${tb} ${pt}
+       if [ $ERR ]; then die "something did not work out in transport_tablespaces_for_partitioned_tables."; fi
+       import_tablespace ${tb}_placeholder
+       exchange_partition_for_partitioned_table ${tb} ${pt}
     done <<< $(mariadb -ABNe "select PARTITION_NAME from information_schema.PARTITIONS where TABLE_NAME='$tb' and TABLE_SCHEMA='$SCHEMA_NAME' order by PARTITION_ORDINAL_POSITION;")
     drop_placeholder_table ${tb}_placeholder
     TEMP_COLOR=lmagenta; print_color "Completed steps for partitioned table $SCHEMA_NAME.${tb}\n";unset TEMP_COLOR;
@@ -461,16 +461,16 @@ function transport_tablespaces_for_subpartitioned_tables() {
   SCHEMA_NAME=$TRG
   while IFS= read -r tb; do  
     create_placeholder_table $tb
-	remove_partitioning_from_placeholder ${tb}_placeholder
+    remove_partitioning_from_placeholder ${tb}_placeholder
     while IIFS= read -r subpt; do
        discard_tablespace ${tb}_placeholder;
        find ${BASEDIR}/${TOOL}/stage -name "${tb}\#*\#${subpt}.ibd" -exec cp -f {}  ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.ibd \; || local ERR=TRUE
-	   find ${BASEDIR}/${TOOL}/stage -name "${tb}\#*\#${subpt}.cfg" -exec cp -f {}  ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.cfg \; || local ERR=TRUE
+       find ${BASEDIR}/${TOOL}/stage -name "${tb}\#*\#${subpt}.cfg" -exec cp -f {}  ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.cfg \; || local ERR=TRUE
        chown $MARIADB_PROCESS_OWNER:$MARIADB_PROCESS_OWNER ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.ibd || local ERR=TRUE
        chown $MARIADB_PROCESS_OWNER:$MARIADB_PROCESS_OWNER ${DATADIR}/${SCHEMA_NAME}/${tb}_placeholder.cfg || local ERR=TRUE
-	   if [ $ERR ]; then die "something did not work out in transport_tablespaces_for_partitioned_tables."; fi
-	   import_tablespace ${tb}_placeholder
-	   exchange_partition_for_partitioned_table ${tb} ${subpt}
+       if [ $ERR ]; then die "something did not work out in transport_tablespaces_for_partitioned_tables."; fi
+       import_tablespace ${tb}_placeholder
+       exchange_partition_for_partitioned_table ${tb} ${subpt}
     done <<< $(mariadb -ABNe "select SUBPARTITION_NAME from information_schema.PARTITIONS where TABLE_NAME='$tb' and TABLE_SCHEMA='$SCHEMA_NAME' order by PARTITION_ORDINAL_POSITION;")
     drop_placeholder_table ${tb}_placeholder
     TEMP_COLOR=lmagenta; print_color "Completed steps for partitioned table $SCHEMA_NAME.${tb}\n";unset TEMP_COLOR;
@@ -505,12 +505,28 @@ function verify_dirs() {
   if [ ! -z "$TABLE_REPORT_OUTPUT" ]; then 
     TEMP_COLOR=lred; print_color "$TABLE_REPORT_OUTPUT\n"; unset TEMP_COLOR; 
     TEMP_COLOR=lyellow; print_color "[ WARNING ] ";unset TEMP_COLOR; 
-	printf "Tables with engine not InnodDB do not have transportable tablespaces and their rows will not be restored.\n"
-	printf "Continue anyway? Type y to continue.\n";
+    printf "Tables with engine not InnodDB do not have transportable tablespaces and their rows will not be restored.\n"
+    printf "Continue anyway? Type y to continue.\n";
     read -s -n 1 RESPONSE
     if [ ! "$RESPONSE" = "y" ]; then die "operation cancelled";  fi
   fi
   
+ }
+ 
+  function tables_with_unsupported_characters() {
+  local SQL_FILE="$SQL_DIR/UNSUPPORTED_TABLE_NAMES_REPORT.sql"
+  local SCHEMA_NAME="$TRG"
+  export SCHEMA_NAME
+  local SQL=$(envsubst < $SQL_FILE)
+  local UNSUPPORTED_NAME_REPORT_OUTPUT=$($CMD_MARIADB $CLOPTS -ABNe "$SQL")
+  if [ ! -z "$UNSUPPORTED_NAME_REPORT_OUTPUT" ]; then 
+    TEMP_COLOR=lred; print_color "$UNSUPPORTED_NAME_REPORT_OUTPUT\n"; unset TEMP_COLOR; 
+    TEMP_COLOR=lyellow; print_color "[ WARNING ] ";unset TEMP_COLOR; 
+    printf "Tables with unsupported characters in their names will not be restored.\n"
+    printf "Continue anyway? Type y to continue.\n";
+    read -s -n 1 RESPONSE
+    if [ ! "$RESPONSE" = "y" ]; then die "operation cancelled";  fi
+  fi
  }
  
  function check_required_privs() {
@@ -527,6 +543,19 @@ function verify_dirs() {
   unset V_SKIP_EVENTS
 }
 
+function interactive_rm_tool_directory(){
+  local SIZE=$(du -sh ${BASEDIR}/${TOOL} | awk '{print $1}')
+  TEMP_COLOR=lred; print_color "Note: "; unset TEMP_COLOR;
+  printf "The directory ${BASEDIR}/${TOOL} is ${SIZE} in size and contains\nthe files used to restore the schema ${TRG}. Would you like to remove it?\n"; 
+  printf "Type y to delete ${BASEDIR}/${TOOL}.\n"; 
+  read -s -n 1 RESPONSE
+    if [ "$RESPONSE" = "y" ]; then
+      if [ -d ${BASEDIR}/${TOOL} ]; then 
+        rm -fr ${BASEDIR}/${TOOL}
+        echo "Directory removed!"
+      fi
+    fi 
+}
 ################
 
 

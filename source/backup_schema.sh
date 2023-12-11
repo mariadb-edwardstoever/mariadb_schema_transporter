@@ -6,13 +6,10 @@
 ### FOR FULL INSTRUCTIONS: README.md
 ### FOR BRIEF INSTRUCTIONS: ./backup_schema.sh --help
 
-# Establish working directory and source pre_quick_review.sh
+# Establish working directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source ${SCRIPT_DIR}/../vsn.sh
 source ${SCRIPT_DIR}/pre_backup.sh
-
-
-
 
 
 display_title;
@@ -31,6 +28,3 @@ check_tmp_subdir
 check_required_privs
 mariabackup_schema
 dump_schema
-
-
-

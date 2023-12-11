@@ -1,4 +1,4 @@
--- transport_schema_mariabackup, by Edward Stoever for MariaDB Support
+-- Mariadb Schema Transporter, by Edward Stoever for MariaDB Support
 
 select concat(count(*),' INNODB TABLE(S) NOT PARTITIONED IN SCHEMA ', TABLE_SCHEMA) as txt
 from information_schema.TABLES

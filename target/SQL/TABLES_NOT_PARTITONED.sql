@@ -1,4 +1,4 @@
--- transport_schema_mariabackup, by Edward Stoever for MariaDB Support
+-- Mariadb Schema Transporter, by Edward Stoever for MariaDB Support
 
 select TABLE_NAME 
 from information_schema.TABLES 

@@ -64,7 +64,7 @@ if [ ! $CAN_CONNECT ]; then
   TEMP_COLOR=lyellow; print_color "$CMD_MARIADB $CLOPTS\n";unset TEMP_COLOR; 
   local SQL="select now();"
   ERRTEXT=$($CMD_MARIADB $CLOPTS -e "$SQL" 2>&1); TEMP_COLOR=lcyan; print_color "$ERRTEXT\n";unset TEMP_COLOR;
-  die "Database connection failed. Read the file README.md. Edit the file quick_review.cnf."; 
+  die "Database connection failed. Read the file README.md. Edit the file source.cnf."; 
 fi
 }
 

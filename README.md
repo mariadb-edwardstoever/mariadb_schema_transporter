@@ -19,7 +19,7 @@ git clone https://github.com/mariadb-edwardstoever/mariadb_schema_transporter.gi
 wget https://github.com/mariadb-edwardstoever/mariadb_schema_transporter/archive/refs/heads/main.zip
 ```
 ***
-## Examples 
+## Example 
 The script is divided into two subdirectories, source and target. Assuming you allow for root@localhost connections, with ALL PRIVILEGES connecting via unix socket, you can ignore configuring the script. In that case, to backup a single schema, run the following command from the source directory:
 ```
 ./backup_schema.sh --source-schema=myschema
@@ -116,10 +116,11 @@ Some things to keep in mind:
 
 * You can turn off transport of EVENTS with the option `--skip-events` when backing up on the source.
 * You can turn off transport of ROUTINES with the option `--skip-routines` when backing up on the source.
-* You can turn off the privilege check with the option `--bypass-priv-check` which will let you run either script even if the database user doesn't have all the required privileges. You may see a failure.
+* You can turn off the privilege check with the option `--bypass-priv-check` which will let you run either script even if the database user doesn't have all the required privileges. This may be required for backward compatibility to old releases.
 * It is possible to skip saving the backup as a compressed archive with the option `--compressed=false`. This takes up much more storage space and makes transferring the files to another host more cumbersome. When using this option, find the created files in the subdirectory `stage`. 
 * When the restore_schema.sh is run to create the target schema, foreign key and check constraints will be disabled during the operation.
 * When copying files from one host to another, use scp or rsync and transfer the directory `schema_transporter` and its contents. It is important that the directory `schema_transporter` exists in the directory defined by the `--base-dir` option. It is important that _the user running_ the restore_schema.sh script _and the user running mariadb process_ have read and write privileges on the `schema_transporter` directory.
+* Mariadb is not responsible for your use of this script. Please test it thoroughly in the appropriate test environment to ensure it does what you are expecting it to do.
 ***
 ## Limitations
 There are limitations you should be aware of when using Mariadb Schema Transporter:
