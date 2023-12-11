@@ -73,7 +73,8 @@ Once the operation is completed, the script will ask you if you want to remove t
 #### Where do the files go?
 When you run the backup_schema.sh or the restore_schema.sh scripts, you can indicate an alternative directory for the files. The default is `/tmp`. 
 
-Suppose you prepare a large partition and mount it at `/opt/mydb_bkup`. You can run either script with the option `&#8209;&#8209;base-dir=/opt/mydb_bkup`. 
+Suppose you prepare a large partition and mount it at `/opt/mydb_bkup`. You can run either script with the option 
+`--base-dir=/opt/mydb_bkup`. 
 
 With the option `--base-dir=/opt/mydb_bkup`, the backup script will store the files in `/opt/mydb_bkup/schema_transporter`. 
 
