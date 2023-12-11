@@ -57,7 +57,7 @@ If you want to make the task of grants easy and reliable, especially on the targ
 ## Planning the backup and restore
 It is important to plan for the required storage space for the backup on the source and the restore on the target. 
 #### Source
-The easiest option is the default `--compressed=true` which will compress the backup into an archive. This means that the source machine really only needs a mount point with about 30% of the space used for the subdirectory of the datadir where the schema is stored. For example, if your schema is called mydb, you can see how much space it uses (datadir is /var/lib/mysql in this example):
+The easiest option is the default `--compressed=true` which will compress the backup into an archive. This means that the source machine really only needs a mount point with about 50% of the space used for the subdirectory of the datadir where the schema is stored. For example, if your schema is called mydb, you can see how much space it uses (datadir is /var/lib/mysql in this example):
 ```
 $ du -sh /var/lib/mysql/mydb
 11G     /var/lib/mysql/mydb
@@ -73,7 +73,7 @@ Once the operation is completed, the script will ask you if you want to remove t
 #### Where do the files go?
 When you run the backup_schema.sh or the restore_schema.sh scripts, you can indicate an alternative directory for the files. The default is `/tmp`. 
 
-Suppose you prepare a large partition and mount it at `/opt/mydb_bkup`. You can run either script with the option `--base-dir=/opt/mydb_bkup`. 
+Suppose you prepare a large partition and mount it at `/opt/mydb_bkup`. You can run either script with the option `&#8209;&#8209;base-dir=/opt/mydb_bkup`. 
 
 With the option `--base-dir=/opt/mydb_bkup`, the backup script will store the files in `/opt/mydb_bkup/schema_transporter`. 
 
