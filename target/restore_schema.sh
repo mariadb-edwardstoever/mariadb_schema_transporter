@@ -8,7 +8,7 @@
 
 # Establish working directory and source pre_quick_review.sh
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source ${SCRIPT_DIR}/vsn.sh
+source ${SCRIPT_DIR}/../vsn.sh
 source ${SCRIPT_DIR}/pre_restore.sh
 
 display_title;
@@ -16,6 +16,7 @@ start_message;
 test_dependencies;
 stop_here_if_necessary;
 whoami_db;
+check_required_privs
 interactive_schema_exists
 is_db_localhost;
 verify_dirs

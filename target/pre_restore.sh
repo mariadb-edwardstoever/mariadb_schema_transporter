@@ -5,7 +5,6 @@
 
 TEMPDIR="/tmp"
 CONFIG_FILE="$SCRIPT_DIR/target.cnf"
-TOOL="mariadb_schema_transporter"
 SQL_DIR="$SCRIPT_DIR/SQL"
 TABLE_LIST_FILE="${TEMPDIR}/tables_list.out"
 PARTITIONED_TABLE_LIST_FILE="${TEMPDIR}/tables_partitioned_list.out"
@@ -25,13 +24,14 @@ function die() {
 }
 
 
-if [ ! $SCRIPT_VERSION ]; then  die "Do not run this script directly. Read the file README.md for help."; fi
+if [ ! $SCRIPT_VERSION ]; then  die "Do not run ${BASH_SOURCE[0]} script directly. Read the file README.md for help."; fi
 
 function display_help_message() {
 printf "This script cannot be run without the target-schema option.
-  --target-schema=mydb       # Indicate the schema to backup, this is required
+  --target-schema=mydb_new   # Indicate the schema to restore, this is required
   --base-dir=/opt/mydb_bkup  # Indicate a base directory where the subdirectory
                              # mariadb_schema_transporter is located. Default: /tmp 
+  --bypass-priv-check        # Bypass the check that the user has sufficient privileges.
   --test                     # Test connect to database and display script version
   --version                  # Test connect to database and display script version
   --help                     # Display the help menu
@@ -317,7 +317,7 @@ function set_datadir(){
   local SQL_FILE="$SQL_DIR/DATADIR.sql"
   local SQL=$(cat $SQL_FILE)
   DATADIR=$($CMD_MARIADB $CLOPTS  -ABNe "$SQL" | sed 's:/*$::') || local ERR=TRUE;
-  if [ $ERR ]; then die "Something went wrong when importing tablespace for $SCHEMA_NAME.$TABLE_NAME"; fi
+  if [ $ERR ]; then die "Something went wrong when setting DATADIR"; fi
 }
 
 function discard_tablespace () {
@@ -512,6 +512,21 @@ function verify_dirs() {
   fi
   
  }
+ 
+ function check_required_privs() {
+  if [ "$BYPASS_PRIV_CHECK" == "TRUE" ]; then return; fi
+  local SQL_FILE="$SQL_DIR/REQUIRED_PRIVS.sql"
+  if [ $SKIP_EVENTS ]; then V_SKIP_EVENTS='SKIP'; else V_SKIP_EVENTS='DO'; fi
+  export V_SKIP_EVENTS
+  local SQL=$(envsubst < $SQL_FILE)
+
+  if [ ! "$BYPASS_PRIV_CHECK" == "TRUE" ]; then
+      ERR=$($CMD_MARIADB $CLOPTS -e "$SQL")
+      if [ "$ERR" ]; then die "$ERR"; fi
+  fi
+  unset V_SKIP_EVENTS
+}
+
 ################
 
 
@@ -540,7 +555,7 @@ if [ $(echo "$params"|sed 's,=.*,,') == '--base-dir' ]; then
    VALID=TRUE; 
   fi
 fi
-
+  if [ "$params" == '--bypass-priv-check' ]; then BYPASS_PRIV_CHECK='TRUE'; VALID=TRUE; fi
   if [ "$params" == '--compressed=true' ]; then VALID=TRUE; fi # DEFAULT: COMPRESSED=TRUE
   if [ "$params" == '--compressed=false' ]; then unset COMPRESSED; VALID=TRUE; fi 
   if [ "$params" == '--skip-events' ]; then SKIP_EVENTS=TRUE; VALID=TRUE; fi

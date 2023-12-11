@@ -9,8 +9,8 @@
 
 # The group name must be [source]
 [source]
- user = mariabackup
- password = pw1
+# user = mariabackup
+# password = pw1
 # host = localhost
 # port = 3306
 

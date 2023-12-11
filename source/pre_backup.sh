@@ -5,7 +5,6 @@
 
 TEMPDIR="/tmp"
 CONFIG_FILE="$SCRIPT_DIR/source.cnf"
-TOOL="mariadb_schema_transporter"
 COMPRESSED="TRUE" # DEFAULT
 SQL_DIR="$SCRIPT_DIR/SQL"
 TABLE_LIST_FILE="${TEMPDIR}/mariabackup_tables_list.out"
@@ -22,16 +21,17 @@ function die() {
 }
 
 
-if [ ! $SCRIPT_VERSION ]; then  die "Do not run this script directly. Read the file README.md for help."; fi
+if [ ! $SCRIPT_VERSION ]; then  die "Do not run ${BASH_SOURCE[0]} script directly. Read the file README.md for help."; fi
 
 function display_help_message() {
 printf "This script cannot be run without the source-schema option.
   --source-schema=mydb       # Indicate the schema to backup, this is required
   --base-dir=/opt/mydb_bkup  # Indicate a base directory to store backup. 
                              # Base directory must exist. Default: /tmp 
-  --compressed=false         # Do not compress backup into a single file
+  --compressed=false         # Do not compress backup into an archive
   --skip-events              # Do not include events in the transported schema
   --skip-routines            # Do not include routines in the transported schema
+  --bypass-priv-check        # Bypass the check that the user has sufficient privileges.
   --test                     # Test connect to database and display script version
   --version                  # Test connect to database and display script version
   --help                     # Display the help menu
@@ -263,6 +263,7 @@ function dump_schema() {
 }
 
 function check_required_privs() {
+  if [ "$BYPASS_PRIV_CHECK" == "TRUE" ]; then return; fi
   local SQL_FILE="$SQL_DIR/REQUIRED_PRIVS.sql"
   if [ $SKIP_EVENTS ]; then V_SKIP_EVENTS='SKIP'; else V_SKIP_EVENTS='DO'; fi
   export V_SKIP_EVENTS
@@ -292,7 +293,8 @@ function check_tmp_subdir(){
 }
 
 function print_table_list_to_file(){
-  local SQL="select concat(TABLE_SCHEMA,'.',TABLE_NAME) from information_schema.TABLES where TABLE_SCHEMA='$SRC' AND TABLE_TYPE='BASE TABLE';"
+  # REGEX HERE ENSURES TABLE NAMES DO NOT CONTAIN UNUSUAL CHARACTERS, ONLY 0-9,a-z,A-Z,_
+  local SQL="select concat(TABLE_SCHEMA,'.',TABLE_NAME) from information_schema.TABLES where TABLE_SCHEMA='$SRC' AND TABLE_TYPE='BASE TABLE' and TABLE_NAME REGEXP '[^a-zA-Z0-9_]+' = 0;"
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" > $TABLE_LIST_FILE
 }
 
@@ -358,7 +360,7 @@ if [ $(echo "$params"|sed 's,=.*,,') == '--base-dir' ]; then
    VALID=TRUE; 
   fi
 fi
-
+  if [ "$params" == '--bypass-priv-check' ]; then BYPASS_PRIV_CHECK='TRUE'; VALID=TRUE; fi
   if [ "$params" == '--compressed=true' ]; then VALID=TRUE; fi # DEFAULT: COMPRESSED=TRUE
   if [ "$params" == '--compressed=false' ]; then unset COMPRESSED; VALID=TRUE; fi 
   if [ "$params" == '--skip-events' ]; then SKIP_EVENTS=TRUE; VALID=TRUE; fi

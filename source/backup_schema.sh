@@ -8,7 +8,7 @@
 
 # Establish working directory and source pre_quick_review.sh
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source ${SCRIPT_DIR}/vsn.sh
+source ${SCRIPT_DIR}/../vsn.sh
 source ${SCRIPT_DIR}/pre_backup.sh
 
 
