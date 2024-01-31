@@ -357,6 +357,8 @@ function copy_table_files() {
 function transport_tablespaces_for_not_partitioned_tables() {
   if [ ! -z "$(cat $TABLE_LIST_FILE)" ]; then 
     TEMP_COLOR=lyellow; print_color "TRANSPORTING TABLESPACES FOR NON-PARTITIONED TABLES\n";unset TEMP_COLOR;
+  else
+    TEMP_COLOR=lyellow; print_color "NO NON-PARTITIONED TABLES TABLES\n";unset TEMP_COLOR; return;
   fi
   while IFS= read -r line; do  
     discard_tablespace $line;
@@ -376,17 +378,6 @@ foreign_key_checks_on(){
   SQL="set global foreign_key_checks=ON; set global check_constraint_checks=ON;"
   $CMD_MARIADB $CLOPTS -ABNe "$SQL" || local ERR=TRUE
   if [ $ERR ]; then die "Something went wrong when setting foreign_key_checks=ON"; fi
-}
-
-
-function create_placeholder_table () {
-  SCHEMA_NAME=$TRG
-  TABLE_NAME=$1
-  if [ ! $TABLE_NAME ]; then die "No table name to create placeholder?"; fi
-  SQL="CREATE TABLE ${SCHEMA_NAME}.${TABLE_NAME}_placeholder LIKE ${SCHEMA_NAME}.${TABLE_NAME};"
-  $CMD_MARIADB $CLOPTS -ABNe "$SQL" || local ERR=TRUE;
-  if [ $ERR ]; then die "Something went wrong when creating placeholder table for ${SCHEMA_NAME}.${TABLE_NAME}"; fi
-  TEMP_COLOR=lcyan; print_color "Created placeholder table for ${SCHEMA_NAME}.${TABLE_NAME}\n";unset TEMP_COLOR;
 }
 
 function remove_partitioning_from_placeholder () {
@@ -434,6 +425,8 @@ function exchange_partition_for_partitioned_table(){
 function transport_tablespaces_for_partitioned_tables() {
   if [ ! -z "$(cat $PARTITIONED_TABLE_LIST_FILE)" ]; then 
     TEMP_COLOR=lyellow; print_color "TRANSPORTING TABLESPACES FOR PARTITIONED TABLES\n";unset TEMP_COLOR;
+  else
+    TEMP_COLOR=lyellow; print_color "NO PARTITIONED TABLES\n";unset TEMP_COLOR; return;
   fi
   SCHEMA_NAME=$TRG
   while IFS= read -r tb; do  
@@ -457,6 +450,8 @@ function transport_tablespaces_for_partitioned_tables() {
 function transport_tablespaces_for_subpartitioned_tables() {
   if [ ! -z "$(cat $SUBPARTITIONED_TABLE_LIST_FILE)" ]; then 
     TEMP_COLOR=lyellow; print_color "TRANSPORTING TABLESPACES FOR SUBPARTITIONED TABLES\n";unset TEMP_COLOR;
+  else
+    TEMP_COLOR=lyellow; print_color "NO SUBPARTITIONED TABLES\n";unset TEMP_COLOR; return;
   fi
   SCHEMA_NAME=$TRG
   while IFS= read -r tb; do  
