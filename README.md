@@ -88,12 +88,13 @@ The base directory for the source does not have to be the same as the base direc
 A number of options are available when running the backup_schema.sh script:
 ```
   --source-schema=mydb       # Indicate the schema to backup, this is required
-  --base-dir=/opt/mydb_bkup  # Indicate a base directory to store backup.
+  --base-dir=/opt/mydb_bkup  # Indicate a base directory to store backup
                              # Base directory must exist. Default: /tmp
   --compressed=false         # Do not compress backup into a single file
+  --skip-fks                 # Do not define foreign keys in tables to be transported
   --skip-events              # Do not include events in the transported schema
   --skip-routines            # Do not include routines in the transported schema
-  --bypass-priv-check        # Bypass the check that the user has sufficient privileges.
+  --bypass-priv-check        # Bypass the check that the user has sufficient privileges
   --test                     # Test connect to database and display script version
   --version                  # Test connect to database and display script version
   --help                     # Display the help menu
@@ -127,5 +128,48 @@ Some things to keep in mind:
 There are limitations you should be aware of when using Mariadb Schema Transporter:
 1. Tables with out-of-the-ordinary characters in their names will be bypassed automatically. Examples of such tables would be ones with names like `M$_variables` (with $) or `innovación` (with a tilde). This is because the file name will be different from the table name. Currently, names with a-z, A-Z, 0-9, and _ (underscore) will work just fine. Any other characters in a table name will cause the table to be transferred to the target but with no rows. In a future release, this limitation may be sorted out. 
 2. Tables in the schema you transport with any ENGINE that is not InnoDB will be transferred to the target without rows. It is possible for _you_ to dump the rows and insert them as a separate operation.
+
+## MDEV-36827
+In the most recent versions of Mariadb-backup, we have discovered a bug which is documented here: https://jira.mariadb.org/browse/MDEV-36827
+The problem occurs during the backup phase, but no error is reported. Mariadb Schema Transporter uses a feature in Mariabackup called "tables-file" which is a list of tables to be backed up. With the bug, the backup appears to complete without error but nothing is actually backed up. When you attempt to restore to a new schema, you will see this error:
+```
+ERROR 1030 (HY000) at line 1: Got error 194 "Tablespace is missing for a table" from storage engine InnoDB
+2025_06_06_11_10_14 Something went wrong when importing tablespace for ooni.PERSONS
+```
+The bug is present in the following versions of mariabackup, and perhaps exists in more versions:
+10.6.22 Community
+10.11.11 Community
+11.4.5 Community
+11.8.1 Community
+11.8.2 Community
+10.6.21 Enterprise
+
+## Workarounds for bug MDEV-36827
+Currently, there are two ways of working around this bug. Version 11.8 has no workaround.
+
+### Workaround #1
+The first workaround is to force Mariadb Schema Transporter to use an older version of Mariabackup that does not include the bug. I have added mariadb-backup files for versions that work in the bin directory. They were compiled for Debian, but they will likely work on any linux version. Edit the file source/pre_backup.sh and at the bottom of the file, uncomment out the line that applies to the version you are working with.
+
+### Workaround #2
+Do not downgrade the mariadb-server, however downgrade the version of mariadb-backup. For example, let's say you have installed Mariadb-server 10.11.11 and Mariadb-backup 10.11.11. You want to downgrade only Mariadb-backup. You would run these commands:
+```
+apt remove mariadb-backup
+./mariadb_repo_setup --mariadb-server-version=10.11.10
+apt install maria-backup
+```
+
+## Cross Version Compatibility
+Transporting a schema from and to the same version of Mariadb server will always work. It is possible to transport from one version to a different version in some cases. The following table indicates where transporting across versions will work. All versions of 11.8 are not working yet because of bug MDEV-36827.
+```
++-------------+---------+---------+----------+---------+------------+
+|             | TO 10.5 | TO 10.6 | TO 10.11 | TO 11.4 | TO 11.8    |
++-------------+---------+---------+----------+---------+------------+
+| FROM 10.5   | OK      | OK      | FAILS    | FAILS   |            |
+| FROM 10.6   | OK      | OK      | FAILS    | FAILS   |            |
+| FROM 10.11  | FAILS   | FAILS   | OK       | OK      |            |
+| FROM 11.4   | FAILS   | FAILS   | FAILS    | OK      |            |
+| FROM 11.8   |         |         |          |         | MDEV-36827 |
++-------------+---------+---------+----------+---------+------------+
+```
 
 ### _Happy Transporting!_

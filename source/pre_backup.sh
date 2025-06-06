@@ -26,12 +26,13 @@ if [ ! $SCRIPT_VERSION ]; then  die "Do not run ${BASH_SOURCE[0]} script directl
 function display_help_message() {
 printf "This script cannot be run without the source-schema option.
   --source-schema=mydb       # Indicate the schema to backup, this is required
-  --base-dir=/opt/mydb_bkup  # Indicate a base directory to store backup. 
+  --base-dir=/opt/mydb_bkup  # Indicate a base directory to store backup 
                              # Base directory must exist. Default: /tmp 
   --compressed=false         # Do not compress backup into an archive
+  --skip-fks                 # Do not define foreign keys in tables to be transported
   --skip-events              # Do not include events in the transported schema
   --skip-routines            # Do not include routines in the transported schema
-  --bypass-priv-check        # Bypass the check that the user has sufficient privileges.
+  --bypass-priv-check        # Bypass the check that the user has sufficient privileges
   --test                     # Test connect to database and display script version
   --version                  # Test connect to database and display script version
   --help                     # Display the help menu
@@ -251,9 +252,17 @@ function dump_schema() {
   routines_exist
     TEMP_COLOR=lcyan; print_color "Dumping schema $SRC.\n";unset TEMP_COLOR; 
   if [ $COMPRESSED ]; then
-    $CMD_MARIADB_DUMP $SRC $CLOPTS $ROUTINES $EVENTS --skip-lock-tables --no-data | gzip > ${BASEDIR}/${TOOL}/source_schema.dump.sql.gz || local ERR=TRUE;
+    if [ $SKIP_FKS ]; then
+      $CMD_MARIADB_DUMP $SRC $CLOPTS $ROUTINES $EVENTS --skip-lock-tables --no-data | sed '$!N;s/^\(\s*[^C].*\),\n\s*CONSTRAINT.*FOREIGN KEY.*$/\1/;P;D' | grep -v 'FOREIGN KEY' | gzip > ${BASEDIR}/${TOOL}/source_schema.dump.sql.gz || local ERR=TRUE;
+    else
+      $CMD_MARIADB_DUMP $SRC $CLOPTS $ROUTINES $EVENTS --skip-lock-tables --no-data | gzip > ${BASEDIR}/${TOOL}/source_schema.dump.sql.gz || local ERR=TRUE;
+    fi
   else
-    $CMD_MARIADB_DUMP $SRC $CLOPTS $ROUTINES $EVENTS --skip-lock-tables --no-data > ${BASEDIR}/${TOOL}/stage/source_schema.dump.sql || local ERR=TRUE;
+    if [ $SKIP_FKS ]; then
+      $CMD_MARIADB_DUMP $SRC $CLOPTS $ROUTINES $EVENTS --skip-lock-tables --no-data | sed '$!N;s/^\(\s*[^C].*\),\n\s*CONSTRAINT.*FOREIGN KEY.*$/\1/;P;D' | grep -v 'FOREIGN KEY' > ${BASEDIR}/${TOOL}/stage/source_schema.dump.sql || local ERR=TRUE;
+    else
+      $CMD_MARIADB_DUMP $SRC $CLOPTS $ROUTINES $EVENTS --skip-lock-tables --no-data > ${BASEDIR}/${TOOL}/stage/source_schema.dump.sql || local ERR=TRUE;
+    fi
   fi
   if [ $ERR ]; then 
     TEMP_COLOR=lred; print_color "An error has occurred.\n"; unset TEMP_COLOR; die "Stopping intentionally."; 
@@ -363,6 +372,8 @@ fi
   if [ "$params" == '--bypass-priv-check' ]; then BYPASS_PRIV_CHECK='TRUE'; VALID=TRUE; fi
   if [ "$params" == '--compressed=true' ]; then VALID=TRUE; fi # DEFAULT: COMPRESSED=TRUE
   if [ "$params" == '--compressed=false' ]; then unset COMPRESSED; VALID=TRUE; fi 
+     # skip-fks option borrowed from here: https://stackoverflow.com/questions/11003983/how-do-i-dump-mysql-file-without-foreign-keys-via-command-line
+  if [ "$params" == '--skip-fks' ]; then SKIP_FKS=TRUE; VALID=TRUE; fi  
   if [ "$params" == '--skip-events' ]; then SKIP_EVENTS=TRUE; VALID=TRUE; fi
   if [ "$params" == '--skip-routines' ]; then SKIP_ROUTINES=TRUE; VALID=TRUE; fi
   if [ "$params" == '--version' ]; then DISPLAY_VERSION=TRUE; VALID=TRUE; fi
@@ -391,3 +402,18 @@ test_dependencies
 
 CLOPTS=$($CMD_MY_PRINT_DEFAULTS --defaults-file=$CONFIG_FILE source | sed -z -e "s/\n/ /g")
 if [ -z "$CLOPTS" ]; then CLOPTS="--user=$(whoami)"; fi
+
+
+##### OVERRIDE FOR BUG MDEV-36827 https://jira.mariadb.org/browse/MDEV-36827
+# If you are using a version of Mariadb that is effected by this bug, you can override it by using a version distributed with this script.
+# These backup versions were compiled for Debian and will likely work on Redhat versions.
+# Uncomment the line that applies to your version:
+
+# FOR MARIADB 10.6.20, 10.6.21, and 10.6.22, uncomment the next line:
+# CMD_MARIABACKUP=$SCRIPT_DIR/bin/mariadb-backup_10.6.19
+
+# FOR MARIADB 10.11.11 uncomment the next line:
+# CMD_MARIABACKUP=$SCRIPT_DIR/bin/mariadb-backup_10.11.10
+
+# FOR MARIADB 11.4.5 uncomment the next line:
+# CMD_MARIABACKUP=$SCRIPT_DIR/bin/mariadb-backup_11.4.4

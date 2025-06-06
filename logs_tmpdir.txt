@@ -1,0 +1,5 @@
+/opt/db1/tmp/:
+total 0
+-rw-r--r-- 1 root root 0 Jun  3 20:33 gcache.page.000001
+-rw-r--r-- 1 root root 0 Jun  3 20:33 gcache.page.000002
+-rw-r--r-- 1 root root 0 Jun  3 20:33 gcache.page.000003
