@@ -410,10 +410,10 @@ if [ -z "$CLOPTS" ]; then CLOPTS="--user=$(whoami)"; fi
 # Uncomment the line that applies to your version:
 
 # FOR MARIADB 10.6.20, 10.6.21, and 10.6.22, uncomment the next line:
-# CMD_MARIABACKUP=$SCRIPT_DIR/bin/mariadb-backup_10.6.19
+# CMD_MARIABACKUP=$SCRIPT_DIR/../bin/mariadb-backup_10.6.19
 
 # FOR MARIADB 10.11.11 uncomment the next line:
-# CMD_MARIABACKUP=$SCRIPT_DIR/bin/mariadb-backup_10.11.10
+# CMD_MARIABACKUP=$SCRIPT_DIR/../bin/mariadb-backup_10.11.10
 
 # FOR MARIADB 11.4.5 uncomment the next line:
-# CMD_MARIABACKUP=$SCRIPT_DIR/bin/mariadb-backup_11.4.4
+# CMD_MARIABACKUP=$SCRIPT_DIR/../bin/mariadb-backup_11.4.4
