@@ -61,7 +61,6 @@ The easiest option is the default `--compressed=true` which will compress the ba
 ```
 $ du -sh /var/lib/mysql/mydb
 11G     /var/lib/mysql/mydb
-
 ```
 #### Target
 The target will require additional free space, even more than the source. First, you must have a mount point to place the two compressed files `mariabackupstream.gz` and `source_schema.dump.sql.gz`. When the script is run, additional files will be stored in a subdirectory `stage`. Expect the file mariabackupstream.gz to extract about 10 times in overall size, plus you will need some room for a margin of error. So if mariabackupstream.gz is 100M, you will need an _additional_ 1200M of free space.
@@ -116,6 +115,7 @@ A number of options are available when running the restore_schema.sh script:
 ## Be Aware
 Some things to keep in mind:
 
+* You can define tables without foreign keys with the option `--skip-fks` when backing up on the source. This will prevent an error when a table references a primary key that is not part of the transport. 
 * You can turn off transport of EVENTS with the option `--skip-events` when backing up on the source.
 * You can turn off transport of ROUTINES with the option `--skip-routines` when backing up on the source.
 * You can turn off the privilege check with the option `--bypass-priv-check` which will let you run either script even if the database user doesn't have all the required privileges. This may be required for backward compatibility to old releases.
@@ -159,7 +159,7 @@ apt install maria-backup
 ```
 
 ## Cross Version Compatibility
-Transporting a schema from and to the same version of Mariadb server will always work. It is possible to transport from one version to a different version in some cases. The following table indicates where transporting across versions will work. All versions of 11.8 are not working yet because of bug MDEV-36827.
+Transporting a schema to the same version of Mariadb server will always work. It is possible to transport from one version to a different version in some cases. The following table indicates where transporting across versions will work. All versions of 11.8 are not working yet because of bug MDEV-36827.
 ```
 +-------------+---------+---------+----------+---------+------------+
 |             | TO 10.5 | TO 10.6 | TO 10.11 | TO 11.4 | TO 11.8    |
