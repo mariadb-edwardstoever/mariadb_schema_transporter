@@ -137,12 +137,12 @@ ERROR 1030 (HY000) at line 1: Got error 194 "Tablespace is missing for a table" 
 2025_06_06_11_10_14 Something went wrong when importing tablespace for ooni.PERSONS
 ```
 The bug is present in the following versions of mariabackup, and perhaps exists in more versions:
-10.6.22 Community
-10.11.11 Community
-11.4.5 Community
-11.8.1 Community
-11.8.2 Community
-10.6.21 Enterprise
+* 10.6.22 Community
+* 10.11.11 Community
+* 11.4.5 Community
+* 11.8.1 Community
+* 11.8.2 Community
+* 10.6.21 Enterprise
 
 ## Workarounds for bug MDEV-36827
 Currently, there are two ways of working around this bug. Version 11.8 has no workaround.
